@@ -167,7 +167,7 @@ export function DataTable({ rows, columns }) {
             </tr>
           ) : (
             rows.map((row, index) => (
-              <tr key={`${row.id || row.party || row.vendor || row.vertical || index}`}>
+              <tr key={row.id != null ? `row-${row.id}` : `row-${index}-${row.party_name || row.party || row.vendor || ""}`}>
                 {columns.map((col) => (
                   <td key={col}>
                     {numberFields.has(col) && col !== "qty" && col !== "totalQty"
@@ -194,6 +194,8 @@ function VerticalBadge({ value }) {
     HAVELLS: "bg-violet-50 text-violet-700",
     SOLAR: "bg-orange-50 text-orange-700",
     GOV: "bg-cyan-50 text-cyan-700",
+    GOVERNMENT: "bg-cyan-50 text-cyan-700",
+    LUBE: "badge-warning",
     "On Duty": "badge-success",
     "on_duty": "badge-success",
     Live: "badge-success",

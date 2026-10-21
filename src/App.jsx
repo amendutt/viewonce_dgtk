@@ -60,16 +60,7 @@ function isPrivacyPath() {
   if (typeof window === "undefined") return false;
   const path = window.location.pathname.toLowerCase().replace(/\/+$/, "");
   const hash = window.location.hash.toLowerCase().replace(/\/+$/, "");
-  const search = window.location.search.toLowerCase();
-  return (
-    path === "/privacy" ||
-    path.endsWith("/privacy") ||
-    path.endsWith("/privacy.html") ||
-    hash === "#/privacy" ||
-    hash === "#privacy" ||
-    hash.endsWith("/privacy") ||
-    search.includes("privacy")
-  );
+  return path === "/privacy" || hash === "#/privacy" || hash === "#privacy";
 }
 
 function MainLayout() {
@@ -95,11 +86,7 @@ function MainLayout() {
       window.history.pushState({}, "", "/privacy");
       setIsPrivacy(true);
     } else {
-      if (window.history.length > 1 && isPrivacy) {
-        window.history.back();
-      } else {
-        window.history.pushState({}, "", "/");
-      }
+      window.history.pushState({}, "", "/");
       setIsPrivacy(false);
     }
   };

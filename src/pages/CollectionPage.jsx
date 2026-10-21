@@ -59,28 +59,11 @@ export default function CollectionPage() {
       const d = res?.data?.data ?? res?.data ?? [];
       const dataArray = Array.isArray(d) ? d : d?.rows || [];
       
-      const result = [];
-      const onlineUpiGroups = {};
-      dataArray.forEach((row) => {
-        const mode = String(row.payment_mode || "").trim().toLowerCase();
-        const isOnlineOrUpi = mode === "online" || mode === "upi";
-        if (isOnlineOrUpi) {
-          const key = `${row.salesman || ""}|${row.party_id || row.party_name || ""}|${row.vertical || ""}`;
-          if (onlineUpiGroups[key] !== undefined) {
-            onlineUpiGroups[key].amount = Number(onlineUpiGroups[key].amount || 0) + Number(row.amount || 0);
-          } else {
-            const newRow = {
-              ...row,
-              payment_mode: "Online/UPI",
-              amount: Number(row.amount || 0),
-            };
-            onlineUpiGroups[key] = newRow;
-            result.push(newRow);
-          }
-        } else {
-          result.push({ ...row });
-        }
-      });
+      const result = dataArray.map((row) => ({
+        ...row,
+        amount: row.amount != null ? Number(row.amount) : 0,
+        remaining_balance: row.remaining_balance != null ? Number(row.remaining_balance) : 0,
+      }));
 
       setRows(result);
       setFetched(true);
