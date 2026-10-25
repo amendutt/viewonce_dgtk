@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Battery, MapPin, Navigation, Phone, RefreshCw,
@@ -9,6 +9,7 @@ import { verticalColors } from "../data/constants";
 import { locationApi, agentsApi, verticalsApi } from "../api/resources";
 import { useApi } from "../api/hooks";
 import { useApp } from "../context/AppContext";
+import { getExactAreaName, fetchNearbyFamousPlaces, makeFamousPlaceIcon } from "../utils/mapPlaces";
 
 // ─── Leaflet default-icon fix for Vite ────────────────────────────────────────
 delete L.Icon.Default.prototype._getIconUrl;
@@ -19,7 +20,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // ─── Custom div icon ──────────────────────────────────────────────────────────
-function makeIcon(name, isOnDuty, isSelected) {
+function makeIcon(name, isOnDuty, isSelected, areaName) {
   const bg     = isSelected ? "#2563eb" : isOnDuty ? "#10b981" : "#94a3b8";
   const border = isSelected ? "#1d4ed8" : isOnDuty ? "#059669" : "#64748b";
   const label  = (name || "?").split(" ")[0];
@@ -30,25 +31,29 @@ function makeIcon(name, isOnDuty, isSelected) {
     : "";
   return L.divIcon({
     className: "",
-    iconAnchor:  [24, 52],
-    popupAnchor: [0, -54],
+    iconAnchor:  [36, 54],
+    popupAnchor: [0, -56],
     html: `
       <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
         ${pulse}
         <div style="
           position:relative;z-index:1;
           background:${bg};color:#fff;
-          padding:5px 13px;border-radius:10px;
+          padding:5px 12px;border-radius:10px;
           font-size:12px;font-weight:700;white-space:nowrap;
           border:2px solid ${border};
           box-shadow:0 4px 14px rgba(0,0,0,0.22);
           letter-spacing:0.02em;
-        ">${label}</div>
+          display:flex;flex-direction:column;align-items:center;gap:2px;
+        ">
+          <span>${label}</span>
+          ${areaName ? `<span style="font-size:9.5px;font-weight:600;opacity:0.95;letter-spacing:0;background:rgba(0,0,0,0.22);padding:1px 5px;border-radius:4px;">📍 ${areaName}</span>` : ""}
+        </div>
         <div style="width:2px;height:9px;background:${bg};"></div>
         <div style="width:8px;height:8px;border-radius:50%;background:${bg};
           border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>
       </div>`,
-    iconSize: [48, 52],
+    iconSize: [72, 54],
   });
 }
 
@@ -152,11 +157,12 @@ function popupHtml(agent) {
 
 // ─── Map component (raw Leaflet, no react-leaflet) ────────────────────────────
 function AgentMap({ agents, selected, onSelect, mapType, setMapType }) {
-  const mapRef      = useRef(null);
-  const leafletRef  = useRef(null);
-  const markersRef  = useRef({});
-  const initialised = useRef(false);
-  const tileLayerRef = useRef(null);
+  const mapRef         = useRef(null);
+  const leafletRef     = useRef(null);
+  const markersRef     = useRef({});
+  const placesLayerRef = useRef(null);
+  const initialised    = useRef(false);
+  const tileLayerRef   = useRef(null);
 
   // Init map once
   useEffect(() => {
@@ -175,17 +181,24 @@ function AgentMap({ agents, selected, onSelect, mapType, setMapType }) {
     });
 
     const activeLayer = mapType === "satellite"
-      ? L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-          maxZoom: 19,
+      ? L.tileLayer("https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
+          subdomains: ["mt0", "mt1", "mt2", "mt3"],
+          maxZoom: 20,
+          attribution: '&copy; Google Maps',
         })
-      : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
-          maxZoom: 19,
+      : L.tileLayer("https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+          subdomains: ["mt0", "mt1", "mt2", "mt3"],
+          maxZoom: 20,
+          attribution: '&copy; Google Maps',
         });
 
     activeLayer.addTo(map);
     tileLayerRef.current = activeLayer;
+
+    // Layer group for nearby famous areas and landmarks
+    const placesLayer = L.layerGroup().addTo(map);
+    placesLayerRef.current = placesLayer;
+
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
@@ -213,18 +226,40 @@ function AgentMap({ agents, selected, onSelect, mapType, setMapType }) {
     }
 
     const nextLayer = mapType === "satellite"
-      ? L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-          maxZoom: 19,
+      ? L.tileLayer("https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
+          subdomains: ["mt0", "mt1", "mt2", "mt3"],
+          maxZoom: 20,
+          attribution: '&copy; Google Maps',
         })
-      : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
-          maxZoom: 19,
+      : L.tileLayer("https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+          subdomains: ["mt0", "mt1", "mt2", "mt3"],
+          maxZoom: 20,
+          attribution: '&copy; Google Maps',
         });
 
     nextLayer.addTo(map);
     tileLayerRef.current = nextLayer;
+
   }, [mapType]);
+
+  // Load and render nearby famous area names
+  useEffect(() => {
+    const map = leafletRef.current;
+    const placesLayer = placesLayerRef.current;
+    if (!map || !placesLayer || agents.length === 0) return;
+
+    const centerAgent = selected || agents.find((a) => a.status === "Live") || agents[0];
+    if (!centerAgent?.lat || !centerAgent?.lng) return;
+
+    fetchNearbyFamousPlaces(centerAgent.lat, centerAgent.lng, 10000).then((places) => {
+      if (!placesLayerRef.current) return;
+      placesLayer.clearLayers();
+      places.forEach((p) => {
+        const icon = makeFamousPlaceIcon(p.name, p.dist);
+        L.marker([p.lat, p.lng], { icon, zIndexOffset: 300 }).addTo(placesLayer);
+      });
+    });
+  }, [agents.length, selected?.id]);
 
   // Sync markers whenever agents list changes
   useEffect(() => {
@@ -242,7 +277,7 @@ function AgentMap({ agents, selected, onSelect, mapType, setMapType }) {
     // Add / update markers
     agents.forEach((agent) => {
       const isSelected = selected?.id === agent.id;
-      const icon       = makeIcon(agent.name, agent.status === "Live", isSelected);
+      const icon       = makeIcon(agent.name, agent.status === "Live", isSelected, agent.areaName);
       const key        = String(agent.id);
 
       if (markersRef.current[key]) {
@@ -345,6 +380,8 @@ export default function LiveLocationsPage() {
   const liveLocations = Array.isArray(liveData)      ? liveData      : liveData?.agents    || [];
   const verticals     = Array.isArray(verticalsData) ? verticalsData : verticalsData?.rows || [];
 
+  const [resolvedAreas, setResolvedAreas] = useState({});
+
   const filteredFirmAgents = selectedFirmId
     ? allAgents.filter(a => String(a.firm_id) === String(selectedFirmId))
     : allAgents;
@@ -354,14 +391,16 @@ export default function LiveLocationsPage() {
       (l) => String(l.agent_id) === String(agent.id) || String(l.id) === String(agent.id)
     );
     const resolvedVertical = verticals.find((v) => Number(v.id) === Number(agent.vertical_id))?.name;
+    const resolvedArea = resolvedAreas[agent.id] || "";
+    const rawLoc = live?.address || live?.location || agent.location;
     return {
       ...agent,
       name:          agent.User?.name    || agent.name  || live?.name || "Agent " + agent.id,
       status:        (live ? (live.is_live || live.status === "live") : (agent.duty_status === "on" || agent.is_on_duty)) ? "Live" : "Offline",
       lat:           Number(live?.latitude  || live?.lat  || agent.lat  || 26.856),
       lng:           Number(live?.longitude || live?.lng  || agent.lng  || 80.946),
-      location:      live?.address || live?.location || agent.location || "Unknown",
-      areaName:      live?.area_name || agent.area_name || "",
+      location:      rawLoc && rawLoc !== "Unknown" ? rawLoc : (resolvedArea || "Unknown"),
+      areaName:      live?.area_name || agent.area_name || resolvedArea || "",
       battery:       Number(live?.battery || agent.battery || 0),
       mobile:        agent.User?.mobile || agent.mobile || live?.mobile || "—",
       vertical:      resolvedVertical  || agent.vertical_name || agent.vertical || "—",
@@ -370,6 +409,26 @@ export default function LiveLocationsPage() {
       dutyStartedAt: agent.duty_started_at || live?.duty_started_at || null,
     };
   });
+
+  // Automatically reverse-geocode missing area names for agents
+  useEffect(() => {
+    filteredFirmAgents.forEach((agent) => {
+      const live = liveLocations.find(
+        (l) => String(l.agent_id) === String(agent.id) || String(l.id) === String(agent.id)
+      );
+      const lat = Number(live?.latitude || live?.lat || agent.lat);
+      const lng = Number(live?.longitude || live?.lng || agent.lng);
+      const hasArea = live?.area_name || agent.area_name;
+
+      if (!hasArea && !resolvedAreas[agent.id] && lat && lng) {
+        getExactAreaName(lat, lng).then((name) => {
+          if (name) {
+            setResolvedAreas((prev) => (prev[agent.id] === name ? prev : { ...prev, [agent.id]: name }));
+          }
+        });
+      }
+    });
+  }, [agentsData, liveData, selectedFirmId]);
 
   const [selectedVertical, setSelectedVertical] = useState("All");
 

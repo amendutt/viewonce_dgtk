@@ -158,6 +158,7 @@ export default function SalesOrdersAdminPage() {
                   <th>Items</th>
                   <th>Amount</th>
                   <th>Advance</th>
+                  <th>Remark</th>
                   <th>Mode</th>
                   <th>Status</th>
                   {status === "rejected" && <th>Rejection Reason</th>}
@@ -221,6 +222,13 @@ export default function SalesOrdersAdminPage() {
                       <td className="text-xs whitespace-nowrap">
                         {parseFloat(order.advance_amount) > 0 ? (
                           <span className="text-emerald-600 font-medium">{currency(order.advance_amount)}</span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="text-xs text-slate-600 max-w-[200px]" title={order.remark || ""}>
+                        {order.notes ? (
+                          <span className="line-clamp-2">{order.notes}</span>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
