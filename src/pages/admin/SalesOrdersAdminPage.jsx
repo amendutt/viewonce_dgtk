@@ -226,9 +226,9 @@ export default function SalesOrdersAdminPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="text-xs text-slate-600 max-w-[200px]" title={order.remark || ""}>
+                      <td className="text-xs text-slate-600 whitespace-normal break-words min-w-[160px] max-w-[260px]">
                         {order.notes ? (
-                          <span className="line-clamp-2">{order.notes}</span>
+                          <span>{order.notes}</span>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}

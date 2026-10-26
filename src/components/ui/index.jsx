@@ -1,4 +1,4 @@
-import { useRef } from "react";
+﻿import { useRef } from "react";
 import { motion } from "framer-motion";
 import * as XLSX from "xlsx";
 import { Download, Upload } from "lucide-react";
@@ -150,6 +150,8 @@ export function DataTable({ rows, columns }) {
               else if (col === "payment_mode" || col === "paymentMode") label = "Mode of Payment";
               else if (col === "remaining_balance" || col === "remainingBalance") label = "Remaining Balance";
               else if (col === "items_count" || col === "itemsCount") label = "Items";
+              else if (col === "login_time" || col === "loginTime") label = "First Login Time";
+              else if (col === "logout_time" || col === "logoutTime") label = "Last Logout Time";
               else label = col.replace(/_/g, " ").replace(/([A-Z])/g, " $1");
               return <th key={col}>{label}</th>;
             })}
