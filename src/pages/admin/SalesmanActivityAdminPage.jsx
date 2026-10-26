@@ -129,7 +129,7 @@ export default function SalesmanActivityAdminPage() {
       salesman_id: formattedSalesmanId,
       salesman_name: r.salesman_name || "—",
       login_time: r.login_time || "—",
-      logout_time: r.logout_time || "—",
+      logout_time: (r.live_tracking_status || "Inactive").toLowerCase() === "active" ? "—" : r.logout_time || "—",
       working_hours: r.working_hours || "—",
       live_tracking_status: r.live_tracking_status || "Inactive",
       visits: typeof r.visits === "number" ? r.visits : 0,
