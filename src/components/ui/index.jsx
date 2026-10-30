@@ -152,6 +152,7 @@ export function DataTable({ rows, columns }) {
               else if (col === "items_count" || col === "itemsCount") label = "Items";
               else if (col === "login_time" || col === "loginTime") label = "First Login Time";
               else if (col === "logout_time" || col === "logoutTime") label = "Last Logout Time";
+              else if (col === "advance_amount" || col === "advanceAmount") label = "Advance Amount";
               else label = col.replace(/_/g, " ").replace(/([A-Z])/g, " $1");
               return <th key={col}>{label}</th>;
             })}

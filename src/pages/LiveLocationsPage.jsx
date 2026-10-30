@@ -147,11 +147,12 @@ function popupHtml(agent) {
         ` : ""}
       </div>
 
-      ${dutyTime || lastTime ? `
-        <div style="border-top:1px solid #f1f5f9;padding-top:10px;display:flex;flex-direction:column;gap:6px;">
-          ${dutyTime ? `<div style="font-size:11px;color:#059669;font-weight:600;">⏱ Duty started: ${dutyTime}</div>` : ""}
-          ${lastTime ? `<div style="font-size:11px;color:#94a3b8;font-weight:500;">🕒 Last updated: ${lastTime}</div>` : ""}
-        </div>` : ""}
+      <div style="border-top:1px solid #f1f5f9;padding-top:10px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:11px;color:#059669;font-weight:600;">
+          ⏱ Login time: ${agent.loginTime && agent.loginTime !== 'N/A' ? agent.loginTime : (dutyTime || 'N/A')} ${agent.logoutTime ? `<span style="color:#64748b;font-weight:400;margin-left:4px;">(${agent.logoutTime})</span>` : ''}
+        </div>
+        ${agent.workingHours && agent.workingHours !== '0h 0m' ? `<div style="font-size:11px;color:#4f46e5;font-weight:600;">⏳ Working: ${agent.workingHours}</div>` : ""}
+      </div>
     </div>`;
 }
 
@@ -406,7 +407,10 @@ export default function LiveLocationsPage() {
       vertical:      resolvedVertical  || agent.vertical_name || agent.vertical || "—",
       branch:        agent.Branch?.name || agent.branch_name  || agent.branch   || "—",
       loggedAt:      live?.logged_at  || agent.updatedAt || null,
-      dutyStartedAt: agent.duty_started_at || live?.duty_started_at || null,
+      dutyStartedAt: live?.duty_started_at || agent.duty_started_at || null,
+      loginTime:     live?.login_time || null,
+      logoutTime:    live?.logout_time || null,
+      workingHours:  live?.working_hours || null,
     };
   });
 
@@ -682,22 +686,21 @@ export default function LiveLocationsPage() {
                 />
               </div>
 
-              {(agent.loggedAt || agent.dutyStartedAt) && (
-                <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-col gap-1 text-[10px] font-medium">
-                  {agent.dutyStartedAt && (
-                    <div className="flex items-center gap-1 text-emerald-600">
-                      <Clock size={10} className="shrink-0" />
-                      <span>Duty started: {fmtTime(agent.dutyStartedAt)}</span>
-                    </div>
-                  )}
-                  {agent.loggedAt && (
-                    <div className="flex items-center gap-1 text-slate-400">
-                      <Calendar size={10} className="shrink-0" />
-                      <span>Last updated: {fmtTime(agent.loggedAt)}</span>
-                    </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-col gap-1 text-[10px] font-medium">
+                <div className="flex items-center gap-1 text-emerald-600">
+                  <Clock size={10} className="shrink-0" />
+                  <span>Login time: {agent.loginTime && agent.loginTime !== 'N/A' ? agent.loginTime : (fmtTime(agent.dutyStartedAt) || 'N/A')}</span>
+                  {agent.logoutTime && (
+                    <span className="text-slate-400 font-normal ml-auto">({agent.logoutTime})</span>
                   )}
                 </div>
-              )}
+                {agent.workingHours && agent.workingHours !== "0h 0m" && (
+                  <div className="flex items-center gap-1 text-indigo-600">
+                    <Clock size={10} className="shrink-0" />
+                    <span>Working: {agent.workingHours}</span>
+                  </div>
+                )}
+              </div>
 
               {isSelected && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
