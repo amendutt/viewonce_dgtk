@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { RefreshCw, Filter } from "lucide-react";
+import { RefreshCw, Filter, Download } from "lucide-react";
 import { Panel, DataTable, Input, Select } from "../../components/ui/index.jsx";
-import { eodApi, firmsApi, verticalsApi } from "../../api/resources";
-import { useApi } from "../../api/hooks";
+import { eodApi, firmsApi, verticalsApi, exportsApi } from "../../api/resources";
+import { useApi, downloadBlob } from "../../api/hooks";
 
 const today = new Date().toISOString().slice(0, 10);
 const monthStart = today.slice(0, 8) + "01";
@@ -13,6 +13,7 @@ export default function EodReportsAdminPage() {
   const [verticalId, setVerticalId] = useState("");
   const [fromDate, setFromDate] = useState(monthStart);
   const [toDate, setToDate] = useState(today);
+  const [exporting, setExporting] = useState(false);
 
   const { data: firmsData } = useApi(() => firmsApi.list({ limit: 100 }), []);
   const firms = Array.isArray(firmsData) ? firmsData : firmsData?.rows || [];
@@ -44,6 +45,25 @@ export default function EodReportsAdminPage() {
     outstanding: Number(r.outstanding_amount || r.pending_amount || 0),
   }));
 
+  const handleExportExcel = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const p = {};
+      if (fromDate) p.from_date = fromDate;
+      if (toDate) p.to_date = toDate;
+      if (firmId) p.firm_id = firmId;
+      if (verticalId) p.vertical_id = verticalId;
+      const res = await exportsApi.eodReports(p);
+      const filename = `eod_reports_${fromDate}_to_${toDate}.xlsx`;
+      downloadBlob(res, filename);
+    } catch (err) {
+      console.error("Failed to export EOD reports:", err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const firmOptions = [{ label: "All Firms", value: "" }, ...firms.map((f) => ({ label: f.name, value: String(f.id) }))];
   const verticalOptions = [{ label: "All Verticals", value: "" }, ...verticals.map((v) => ({ label: v.name, value: String(v.id) }))];
 
@@ -68,7 +88,30 @@ export default function EodReportsAdminPage() {
         </div>
       </div>
 
-      <Panel title="EOD Report Submissions" subtitle={`${rows.length} records`}>
+      <Panel
+        title="EOD Report Submissions"
+        subtitle={`${rows.length} records`}
+        action={
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportExcel}
+              disabled={exporting}
+              className="btn-secondary h-9 text-xs flex items-center gap-1.5"
+            >
+              <Download size={14} className={exporting ? "animate-bounce" : ""} />
+              {exporting ? "Exporting..." : "Export Excel"}
+            </button>
+            <button
+              onClick={refetch}
+              disabled={loading}
+              className="btn-secondary h-9 px-3 flex items-center gap-1.5 text-xs justify-center"
+            >
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+              Refresh
+            </button>
+          </div>
+        }
+      >
         {loading ? (
           <div className="py-10 text-center"><div className="h-6 w-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" /></div>
         ) : rows.length === 0 ? (

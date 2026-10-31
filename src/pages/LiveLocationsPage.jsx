@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import {
   Battery, MapPin, Navigation, Phone, RefreshCw,
-  Signal, Clock, Calendar, Filter, Map, Globe,
+  Signal, Clock, Calendar, Filter, Map, Globe, Power,
 } from "lucide-react";
 import L from "leaflet";
 import { verticalColors } from "../data/constants";
@@ -95,6 +95,28 @@ const fmtTime = (iso) =>
       })
     : null;
 
+const formatLoginTime = (agent) => {
+  if (agent.loginTime && agent.loginTime !== "N/A") {
+    // If it only has time like "11:57 AM", prepend today's formatted date
+    if (!/[a-zA-Z]{3}/.test(agent.loginTime.replace(/AM|PM/i, ""))) {
+      const today = new Date().toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        timeZone: "Asia/Kolkata",
+      });
+      return `${today}, ${agent.loginTime}`;
+    }
+    return agent.loginTime;
+  }
+  if (agent.dutyStartedAt && !isNaN(new Date(agent.dutyStartedAt).getTime())) {
+    return fmtTime(agent.dutyStartedAt);
+  }
+  if (agent.lastLogin && !isNaN(new Date(agent.lastLogin).getTime())) {
+    return fmtTime(agent.lastLogin);
+  }
+  return "N/A";
+};
+
 function popupHtml(agent) {
   const isOnDuty  = agent.status === "Live";
   const badgeCls  = isOnDuty
@@ -149,7 +171,7 @@ function popupHtml(agent) {
 
       <div style="border-top:1px solid #f1f5f9;padding-top:10px;display:flex;flex-direction:column;gap:5px;">
         <div style="font-size:11px;color:#059669;font-weight:600;">
-          ⏱ Login time: ${agent.loginTime && agent.loginTime !== 'N/A' ? agent.loginTime : (dutyTime || 'N/A')} ${agent.logoutTime ? `<span style="color:#64748b;font-weight:400;margin-left:4px;">(${agent.logoutTime})</span>` : ''}
+          ⏱ Login time: ${formatLoginTime(agent)} ${agent.logoutTime ? `<span style="color:#64748b;font-weight:400;margin-left:4px;">(${agent.logoutTime})</span>` : ''}
         </div>
         ${agent.workingHours && agent.workingHours !== '0h 0m' ? `<div style="font-size:11px;color:#4f46e5;font-weight:600;">⏳ Working: ${agent.workingHours}</div>` : ""}
       </div>
@@ -352,7 +374,7 @@ export default function LiveLocationsPage() {
     () => locationApi.live(selectedFirmId ? { firm_id: selectedFirmId } : {}),
     [selectedFirmId]
   );
-  const { data: agentsData,  loading: agentsLoading }                       = useApi(() => agentsApi.list({ limit: 100 }), []);
+  const { data: agentsData,  loading: agentsLoading, refetch: refetchAgents } = useApi(() => agentsApi.list({ limit: 100 }), []);
   const { data: verticalsData }                                              = useApi(() => verticalsApi.list(), []);
 
   const [timeLeft, setTimeLeft] = useState(30);
@@ -380,6 +402,28 @@ export default function LiveLocationsPage() {
   const allAgents     = Array.isArray(agentsData)    ? agentsData    : agentsData?.rows    || [];
   const liveLocations = Array.isArray(liveData)      ? liveData      : liveData?.agents    || [];
   const verticals     = Array.isArray(verticalsData) ? verticalsData : verticalsData?.rows || [];
+
+  
+  const [turningOffDuty, setTurningOffDuty] = useState(false);
+
+  const handleTurnOffAllDuty = async () => {
+    const confirm = window.confirm("Are you sure you want to turn duty OFF for all active sales agents?");
+    if (!confirm) return;
+
+    setTurningOffDuty(true);
+    try {
+      const res = await agentsApi.turnOffAllDuty();
+      const msg = res?.data?.message || "All active sales agents have been turned off duty.";
+      alert(msg);
+      if (refetchLive) refetchLive();
+      if (refetchAgents) refetchAgents();
+    } catch (err) {
+      console.error("Failed to turn off duty for all agents:", err);
+      alert(err?.response?.data?.message || "Failed to turn off duty for agents.");
+    } finally {
+      setTurningOffDuty(false);
+    }
+  };
 
   const [resolvedAreas, setResolvedAreas] = useState({});
 
@@ -477,10 +521,21 @@ export default function LiveLocationsPage() {
     <div className="space-y-6">
 
       {/* Header */}
-      <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-600 mb-1">Tracking</p>
-        <h1 className="font-display font-bold text-2xl text-slate-900">Live Agent Locations</h1>
-        <p className="text-sm text-slate-500 mt-0.5 font-medium">Real-time field activity across all branches</p>
+      <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-600 mb-1">Tracking</p>
+          <h1 className="font-display font-bold text-2xl text-slate-900">Live Agent Locations</h1>
+          <p className="text-sm text-slate-500 mt-0.5 font-medium">Real-time field activity across all branches</p>
+        </div>
+        <button
+          onClick={handleTurnOffAllDuty}
+          disabled={turningOffDuty}
+          className="btn-danger h-9 px-3.5 text-xs font-semibold flex items-center gap-1.5 self-start sm:self-auto bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-sm transition-all"
+          title="Turn off duty for all active salesmen"
+        >
+          <Power size={14} className={turningOffDuty ? "animate-spin" : ""} />
+          <span>{turningOffDuty ? "Turning off..." : "Turn Off All Duty"}</span>
+        </button>
       </motion.div>
 
       {/* Verticals Filter */}
@@ -689,7 +744,7 @@ export default function LiveLocationsPage() {
               <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-col gap-1 text-[10px] font-medium">
                 <div className="flex items-center gap-1 text-emerald-600">
                   <Clock size={10} className="shrink-0" />
-                  <span>Login time: {agent.loginTime && agent.loginTime !== 'N/A' ? agent.loginTime : (fmtTime(agent.dutyStartedAt) || 'N/A')}</span>
+                  <span>Login time: {formatLoginTime(agent)}</span>
                   {agent.logoutTime && (
                     <span className="text-slate-400 font-normal ml-auto">({agent.logoutTime})</span>
                   )}
