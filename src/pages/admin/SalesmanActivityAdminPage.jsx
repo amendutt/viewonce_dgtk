@@ -256,7 +256,6 @@ export default function SalesmanActivityAdminPage() {
               "orders",
               "order_value",
               "advance_amount",
-              "cash_collection",
               "pending_balance",
               "new_parties_added",
               "remarks",
