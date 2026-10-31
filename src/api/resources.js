@@ -67,6 +67,7 @@ export const agentsApi = {
       headers: { "Content-Type": "multipart/form-data" },
     }),
   toggleDuty: () => client.post("/agents/duty/toggle"),
+  turnOffAllDuty: () => client.post("/agents/turn-off-all-duty"),
   delete: (id) => client.delete(`/agents/${id}`),
 };
 
