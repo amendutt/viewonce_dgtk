@@ -384,6 +384,7 @@ export const numberFields = new Set([
   "remaining_balance",
   "remainingBalance",
   "order_value",
+  "advance_amount",
   "cash_collection",
   "pending_balance",
 ]);
