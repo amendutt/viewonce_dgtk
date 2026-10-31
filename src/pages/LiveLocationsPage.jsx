@@ -491,7 +491,7 @@ export default function LiveLocationsPage() {
     if (
       agent.vertical &&
       agent.vertical !== "—" &&
-      !uniqueVerticals.some((v) => v.toLowerCase() === agent.vertical.toLowerCase())
+      !uniqueVerticals.some((v) => v?.toLowerCase() === agent.vertical?.toLowerCase())
     ) {
       uniqueVerticals.push(agent.vertical);
     }
@@ -499,7 +499,7 @@ export default function LiveLocationsPage() {
 
   const filteredAgents = agents.filter((agent) => {
     if (selectedVertical === "All") return true;
-    return agent.vertical?.toLowerCase() === selectedVertical.toLowerCase();
+    return agent.vertical?.toLowerCase() === selectedVertical?.toLowerCase();
   });
 
   const [selected, setSelected] = useState(null);
@@ -561,7 +561,7 @@ export default function LiveLocationsPage() {
             const style = getVerticalStyle(vert === "All" ? "" : vert);
             const count = vert === "All"
               ? agents.length
-              : agents.filter(a => a.vertical?.toLowerCase() === vert.toLowerCase()).length;
+              : agents.filter(a => a.vertical?.toLowerCase() === vert?.toLowerCase()).length;
             
             return (
               <button

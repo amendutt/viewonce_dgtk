@@ -173,6 +173,8 @@ export const exportsApi = {
     client.get("/exports/target-report", { params, responseType: "blob" }),
   salesmanActivity: (params = {}) =>
     client.get("/exports/salesman-activity", { params, responseType: "blob" }),
+  eodReports: (params = {}) =>
+    client.get("/exports/eod-reports", { params, responseType: "blob" }),
 };
 
 // ── Imports ───────────────────────────────────────────────────────────────────
