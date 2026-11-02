@@ -158,7 +158,7 @@ export default function SalesOrdersAdminPage() {
                   <th>Items</th>
                   <th>Amount</th>
                   <th>Advance</th>
-                  <th>Remark</th>
+                  <th className="min-w-[180px]">Remark</th>
                   <th>Mode</th>
                   <th>Status</th>
                   {status === "rejected" && <th>Rejection Reason</th>}
@@ -226,14 +226,16 @@ export default function SalesOrdersAdminPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="text-xs text-slate-600 whitespace-normal break-words min-w-[160px] max-w-[260px]">
+                      <td className="!whitespace-normal text-xs text-slate-600 min-w-[180px]">
                         {order.notes ? (
-                          <span>{order.notes}</span>
+                          <div className="whitespace-normal break-words max-w-[220px] leading-relaxed text-slate-700">
+                            {order.notes}
+                          </div>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="capitalize text-xs">{order.payment_mode}</td>
+                      <td className="capitalize text-xs whitespace-nowrap">{order.payment_mode}</td>
                       <td>
                         <span className={`badge ${orderStatus === "approved" ? "badge-success" : orderStatus === "rejected" ? "bg-rose-50 text-rose-700" : "badge-warning"}`}>
                           {orderStatus}
