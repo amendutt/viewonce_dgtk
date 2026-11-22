@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { BadgeIndianRupee, RefreshCw, Filter, ArrowUpRight, ArrowDownRight, TrendingUp } from "lucide-react";
+import { BadgeIndianRupee, RefreshCw, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, Download } from "lucide-react";
 import { Panel, Input, Select } from "../components/ui/index.jsx";
 import { reportsApi } from "../api/resources";
-import { currency } from "../utils/helpers";
+import { currency, downloadExcel } from "../utils/helpers";
 
 const today = new Date().toISOString().slice(0, 10);
 const prevMonthStart = (() => {
@@ -64,6 +64,33 @@ export default function AnalysisPage() {
   const totalPreviousSales = rows.reduce((acc, r) => acc + Number(r.previous_sales || 0), 0);
   const salesDifference = totalCurrentSales - totalPreviousSales;
   const overallGrowth = totalPreviousSales ? ((salesDifference / totalPreviousSales) * 100).toFixed(1) : "0.0";
+
+  const handleExport = () => {
+    if (!rows.length) return;
+    const dimLabel =
+      dimension === "vertical"
+        ? "Vertical"
+        : dimension === "category"
+        ? "Category"
+        : dimension === "product"
+        ? "Product"
+        : "Dimension Item";
+
+    const exportData = rows.map((r) => {
+      const growth = parseFloat(r.growth_percent || 0);
+      return {
+        [dimLabel]: r.name || "—",
+        "Current Period Sales (₹)": Number(r.current_sales || 0),
+        "Previous Period Sales (₹)": Number(r.previous_sales || 0),
+        "Current Orders": Number(r.current_orders || 0),
+        "Previous Orders": Number(r.previous_orders || 0),
+        "Growth (%)": Number(growth.toFixed(1)),
+      };
+    });
+
+    const fileName = `comparison_analytics_${dimension}_${fromDate}_to_${toDate}.xlsx`;
+    downloadExcel(fileName, exportData);
+  };
 
   return (
     <div className="space-y-6">
@@ -135,7 +162,21 @@ export default function AnalysisPage() {
         </div>
       )}
 
-      <Panel title={`${dimensionOptions.find(d => d.value === dimension)?.label} Sales Breakdown`} subtitle="Revenue comparison and volume growth metrics">
+      <Panel
+        title={`${dimensionOptions.find(d => d.value === dimension)?.label} Sales Breakdown`}
+        subtitle="Revenue comparison and volume growth metrics"
+        action={
+          fetched && rows.length > 0 && (
+            <button
+              onClick={handleExport}
+              className="btn-secondary h-9 px-3 text-xs flex items-center gap-1.5"
+            >
+              <Download size={13} />
+              Export Excel
+            </button>
+          )
+        }
+      >
         {loading ? (
           <div className="py-12 text-center"><div className="h-6 w-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" /></div>
         ) : !fetched ? (
