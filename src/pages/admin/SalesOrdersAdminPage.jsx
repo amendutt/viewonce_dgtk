@@ -29,7 +29,7 @@ export default function SalesOrdersAdminPage() {
   const [editedItems, setEditedItems] = useState([]);
 
   const buildParams = () => {
-    const p = { status, page: 1, limit: 50 };
+    const p = { status };
     if (firmId) p.firm_id = firmId;
     if (fromDate) p.from_date = fromDate;
     if (toDate) p.to_date = toDate;
