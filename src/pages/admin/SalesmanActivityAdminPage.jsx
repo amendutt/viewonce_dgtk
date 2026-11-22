@@ -22,7 +22,7 @@ export default function SalesmanActivityAdminPage() {
 
   // Fetch all agents / salesmen
   const { data: agentsData, loading: agentsLoading } = useApi(
-    () => agentsApi.list({ limit: 100 }),
+    () => agentsApi.list({}),
     []
   );
   const agents = Array.isArray(agentsData) ? agentsData : agentsData?.rows || [];
