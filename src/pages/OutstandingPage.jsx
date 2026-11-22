@@ -440,7 +440,7 @@ export default function OutstandingPage() {
       {/* Modal: Sales Orders Contributing to Party Pending Balance */}
       <AnimatePresence>
         {selectedParty && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -455,59 +455,65 @@ export default function OutstandingPage() {
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="relative w-full max-w-4xl bg-white rounded-2xl shadow-card-lg border border-slate-100 overflow-hidden z-10 flex flex-col max-h-[90vh]"
+              className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10 flex flex-col max-h-[90vh]"
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
-                    <ShoppingBag size={20} />
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 bg-slate-50/80">
+                <div className="flex items-center gap-3.5">
+                  <div className="h-11 w-11 rounded-xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center shadow-sm">
+                    <ShoppingBag size={22} />
                   </div>
                   <div>
-                    <h3 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
-                      {selectedParty.party}
-                      <span className="badge badge-brand text-[11px] font-normal">
-                        {selectedParty.vertical}
-                      </span>
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium flex items-center gap-2 mt-0.5">
-                      <span>Salesman: <strong>{selectedParty.salesman}</strong></span>
-                      {selectedParty.firm && <span>· Firm: <strong>{selectedParty.firm}</strong></span>}
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h3 className="font-display font-bold text-xl text-slate-900">
+                        {selectedParty.party}
+                      </h3>
+                      {selectedParty.vertical && (
+                        <span className="inline-flex px-2.5 py-0.5 rounded-full border text-xs font-bold bg-blue-50 text-blue-700 border-blue-200">
+                          {selectedParty.vertical}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 font-medium flex items-center gap-2 mt-1">
+                      <span>Salesman: <strong className="text-slate-900">{selectedParty.salesman}</strong></span>
+                      {selectedParty.firm && <span>· Firm: <strong className="text-slate-900">{selectedParty.firm}</strong></span>}
+                      {selectedParty.branch && <span>· Branch: <strong className="text-slate-900">{selectedParty.branch}</strong></span>}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedParty(null)}
-                  className="h-8 w-8 rounded-full hover:bg-slate-200/60 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                  className="h-9 w-9 rounded-full bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors shadow-sm"
+                  aria-label="Close modal"
                 >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Modal Metrics Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-100">
-                <div className="bg-white p-3 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pending Orders</p>
-                  <p className="text-lg font-bold text-slate-800 mt-0.5">{selectedParty.orders.length}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 p-5 bg-slate-50/50 border-b border-slate-200">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pending Orders</p>
+                  <p className="text-2xl font-bold font-display text-slate-900 mt-1">{selectedParty.orders.length}</p>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Invoiced</p>
-                  <p className="text-lg font-bold text-slate-800 mt-0.5">{currency(selectedParty.total_amount)}</p>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Invoiced</p>
+                  <p className="text-2xl font-bold font-display text-slate-900 mt-1">{currency(selectedParty.total_amount)}</p>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Advance Paid</p>
-                  <p className="text-lg font-bold text-emerald-600 mt-0.5">{currency(selectedParty.advance_amount)}</p>
+                <div className="bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Advance Paid</p>
+                  <p className="text-2xl font-bold font-display text-emerald-600 mt-1">{currency(selectedParty.advance_amount)}</p>
                 </div>
-                <div className="bg-rose-50/60 p-3 rounded-xl border border-rose-100">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-rose-500">Net Pending Balance</p>
-                  <p className="text-lg font-bold text-rose-600 mt-0.5">{currency(selectedParty.outstanding)}</p>
+                <div className="bg-rose-50/70 p-3.5 rounded-xl border border-rose-200 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-rose-700">Net Pending Balance</p>
+                  <p className="text-2xl font-bold font-display text-rose-600 mt-1">{currency(selectedParty.outstanding)}</p>
                 </div>
               </div>
 
               {/* Sales Orders Table */}
-              <div className="p-5 overflow-y-auto flex-1 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <div className="p-6 overflow-y-auto flex-1 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-700">
                     Contributing Sales Orders ({selectedParty.orders.length})
                   </p>
                   <p className="text-xs text-slate-500 font-medium">
@@ -515,44 +521,73 @@ export default function OutstandingPage() {
                   </p>
                 </div>
 
-                <div className="table-container border border-slate-200/80 rounded-xl overflow-hidden">
-                  <table className="data-table">
-                    <thead>
+                <div className="table-container border border-slate-200 rounded-xl overflow-x-auto shadow-sm">
+                  <table className="w-full text-left text-sm divide-y divide-slate-200">
+                    <thead className="bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider">
                       <tr>
-                        <th>Order #</th>
-                        <th>Order Date</th>
-                        <th>Vertical</th>
-                        <th>Salesman</th>
-                        <th>Order Total</th>
-                        <th>Advance Paid</th>
-                        <th>Pending Balance</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Order #</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Order Date</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Vertical</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Salesman</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-right">Order Total</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-right">Advance Paid</th>
+                        <th className="px-4 py-3 whitespace-nowrap text-right">Pending Balance</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {selectedParty.orders.map((ord, idx) => (
-                        <tr key={ord.id || idx} className="hover:bg-slate-50/60">
-                          <td>
-                            <span className="font-mono font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded text-xs border border-brand-200">
-                              {ord.order_number || `SO-${idx + 1}`}
-                            </span>
-                          </td>
-                          <td className="text-slate-600 font-medium">{ord.order_date || "-"}</td>
-                          <td>
-                            <span className="badge badge-brand">{ord.vertical || "-"}</span>
-                          </td>
-                          <td className="text-slate-700">{ord.salesman || "-"}</td>
-                          <td className="font-semibold text-slate-900">{currency(ord.total_amount)}</td>
-                          <td className="text-emerald-600 font-medium">{currency(ord.advance_amount)}</td>
-                          <td className="font-bold text-rose-600">{currency(ord.outstanding)}</td>
-                        </tr>
-                      ))}
+                      {selectedParty.orders.map((ord, idx) => {
+                        const vert = String(ord.vertical || "").toUpperCase();
+                        const vertBadgeClass = vert.includes("TYRE")
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : vert.includes("BATTERY")
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : vert.includes("SOLAR")
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : vert.includes("HAVELL")
+                          ? "bg-violet-50 text-violet-700 border-violet-200"
+                          : vert.includes("LUBE")
+                          ? "bg-orange-50 text-orange-700 border-orange-200"
+                          : vert.includes("GOV")
+                          ? "bg-cyan-50 text-cyan-700 border-cyan-200"
+                          : "bg-slate-100 text-slate-700 border-slate-200";
+
+                        return (
+                          <tr key={ord.id || idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="px-4 py-3.5 whitespace-nowrap">
+                              <span className="font-mono font-semibold text-brand-700 bg-brand-50/80 px-2.5 py-1 rounded-md text-xs border border-brand-200">
+                                {ord.order_number || `SO-${idx + 1}`}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 whitespace-nowrap text-slate-700 font-medium text-xs">
+                              {ord.order_date || "-"}
+                            </td>
+                            <td className="px-4 py-3.5 whitespace-nowrap">
+                              <span className={`inline-flex px-2.5 py-0.5 rounded-full border text-xs font-semibold ${vertBadgeClass}`}>
+                                {ord.vertical || "-"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 whitespace-nowrap text-slate-800 font-medium text-xs">
+                              {ord.salesman || "-"}
+                            </td>
+                            <td className="px-4 py-3.5 whitespace-nowrap font-semibold text-slate-900 text-right">
+                              {currency(ord.total_amount)}
+                            </td>
+                            <td className="px-4 py-3.5 whitespace-nowrap text-emerald-700 font-semibold text-right">
+                              {currency(ord.advance_amount)}
+                            </td>
+                            <td className="px-4 py-3.5 whitespace-nowrap font-bold text-rose-600 text-right">
+                              {currency(ord.outstanding)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+              <div className="px-6 py-4 border-t border-slate-200 bg-slate-50/80 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -568,15 +603,15 @@ export default function OutstandingPage() {
                     }));
                     downloadExcel(`${selectedParty.party}-sales-orders.xlsx`, exportData);
                   }}
-                  className="btn-secondary h-9 px-3 text-xs flex items-center gap-1.5"
+                  className="btn-secondary h-10 px-4 text-xs font-semibold flex items-center gap-2 shadow-sm"
                 >
-                  <Download size={13} />
+                  <Download size={14} />
                   Export These Orders
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedParty(null)}
-                  className="btn-primary h-9 px-4 text-xs"
+                  className="btn-primary h-10 px-5 text-xs font-semibold shadow-sm"
                 >
                   Close
                 </button>
