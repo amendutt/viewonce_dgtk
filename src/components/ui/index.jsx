@@ -147,12 +147,19 @@ export function DataTable({ rows, columns }) {
             {columns.map((col) => {
               let label = col;
               if (col === "outstanding") label = "Pending Balance";
+              else if (col === "order_number" || col === "orderNumber") label = "Order #";
+              else if (col === "order_date" || col === "orderDate") label = "Order Date";
+              else if (col === "total_amount" || col === "totalAmount") label = "Total Amount";
+              else if (col === "advance_amount" || col === "advanceAmount") label = "Advance Amount";
+              else if (col === "pending_amount" || col === "pendingAmount") label = "Pending Balance";
+              else if (col === "orders_count" || col === "ordersCount") label = "Orders";
+              else if (col === "actions" || col === "action") label = "Action";
               else if (col === "payment_mode" || col === "paymentMode") label = "Mode of Payment";
               else if (col === "remaining_balance" || col === "remainingBalance") label = "Remaining Balance";
               else if (col === "items_count" || col === "itemsCount") label = "Items";
+              else if (col === "total_km" || col === "totalKm") label = "Total KM";
               else if (col === "login_time" || col === "loginTime") label = "First Login Time";
               else if (col === "logout_time" || col === "logoutTime") label = "Last Logout Time";
-              else if (col === "advance_amount" || col === "advanceAmount") label = "Advance Amount";
               else label = col.replace(/_/g, " ").replace(/([A-Z])/g, " $1");
               return <th key={col}>{label}</th>;
             })}
@@ -173,11 +180,21 @@ export function DataTable({ rows, columns }) {
               <tr key={row.id != null ? `row-${row.id}` : `row-${index}-${row.party_name || row.party || row.vendor || ""}`}>
                 {columns.map((col) => (
                   <td key={col}>
-                    {numberFields.has(col) && col !== "qty" && col !== "totalQty"
-                      ? currency(row[col])
-                      : col === "vertical" || col === "status" || col === "order_status" || col === "agent_status" || col === "live_tracking_status"
-                      ? <VerticalBadge value={row[col]} />
-                      : row[col]}
+                    {col === "order_number" || col === "orderNumber" ? (
+                      <span className="inline-flex items-center font-mono font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded text-xs border border-brand-200">
+                        {row[col] || "-"}
+                      </span>
+                    ) : col === "total_km" || col === "totalKm" ? (
+                      <span className="font-semibold text-slate-800">
+                        {row[col] ?? "0.00 km"}
+                      </span>
+                    ) : numberFields.has(col) && col !== "qty" && col !== "totalQty" ? (
+                      currency(row[col])
+                    ) : col === "vertical" || col === "status" || col === "order_status" || col === "agent_status" || col === "live_tracking_status" ? (
+                      <VerticalBadge value={row[col]} />
+                    ) : (
+                      row[col] ?? "-"
+                    )}
                   </td>
                 ))}
               </tr>
