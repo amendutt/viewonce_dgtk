@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Battery, MapPin, Navigation, Phone, RefreshCw,
@@ -186,6 +186,9 @@ function AgentMap({ agents, selected, onSelect, mapType, setMapType }) {
   const placesLayerRef = useRef(null);
   const initialised    = useRef(false);
   const tileLayerRef   = useRef(null);
+  // Store onSelect in a ref so click handlers always call the latest version
+  const onSelectRef    = useRef(onSelect);
+  useEffect(() => { onSelectRef.current = onSelect; }, [onSelect]);
 
   // Init map once
   useEffect(() => {
@@ -302,25 +305,28 @@ function AgentMap({ agents, selected, onSelect, mapType, setMapType }) {
       const isSelected = selected?.id === agent.id;
       const icon       = makeIcon(agent.name, agent.status === "Live", isSelected, agent.areaName);
       const key        = String(agent.id);
+      const latLng     = [agent.lat, agent.lng];
 
       if (markersRef.current[key]) {
+        // Update existing marker position, icon and popup content
+        markersRef.current[key].setLatLng(latLng);
         markersRef.current[key].setIcon(icon);
-        markersRef.current[key].setLatLng([agent.lat, agent.lng]);
         markersRef.current[key].setPopupContent(popupHtml(agent));
       } else {
-        const m = L.marker([agent.lat, agent.lng], { icon })
+        const m = L.marker(latLng, { icon })
           .bindPopup(popupHtml(agent), {
             className:   "agent-popup",
             maxWidth:    260,
             minWidth:    240,
             closeButton: false,
           })
-          .on("click", () => onSelect(agent))
+          // Use ref so the click handler always calls the latest onSelect
+          .on("click", () => onSelectRef.current(agent))
           .addTo(map);
         markersRef.current[key] = m;
       }
     });
-  }, [agents, selected, onSelect]);
+  }, [agents, selected]);
 
   // Fly to selected agent
   useEffect(() => {
@@ -514,8 +520,8 @@ export default function LiveLocationsPage() {
   const loading     = liveLoading || agentsLoading;
   const filteredOnDutyCount = filteredAgents.filter((a) => a.status === "Live").length;
 
-  const handleSelect = (agent) =>
-    setSelected((prev) => (prev?.id === agent.id ? null : agent));
+  const handleSelect = useCallback((agent) =>
+    setSelected((prev) => (prev?.id === agent.id ? null : agent)), []);
 
   return (
     <div className="space-y-6">
