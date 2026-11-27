@@ -140,7 +140,9 @@ export default function SalesmanActivityAdminPage() {
       pending_balance: typeof r.pending_balance === "number" ? r.pending_balance : Number(r.pending_balance || 0),
       new_parties_added: typeof r.new_parties_added === "number" ? r.new_parties_added : 0,
       remarks: r.remarks || "—",
-      total_km: r.total_km !== undefined && r.total_km !== null ? `${Number(r.total_km).toFixed(2)} km` : "0.00 km",
+      total_km: r.total_km !== undefined && r.total_km !== null
+        ? `${(Number(r.total_km) < 0.05 ? 0 : Number(r.total_km)).toFixed(2)} km`
+        : "0.00 km",
     };
   });
 
